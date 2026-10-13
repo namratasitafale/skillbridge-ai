@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  issues      Issue[]
+
+  @@index([createdAt])
+}
+
+model Issue {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  type        String
+  status      String          @default("TODO")
+  priority    String          @default("MEDIUM")
+  assignee    String?
+  dueDate     DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  projectId   String
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  comments    IssueComment[]
+  activities  IssueActivity[]
+
+  @@index([projectId, status])
+  @@index([type, priority])
+  @@index([assignee])
+  @@index([dueDate])
+  @@index([createdAt])
+}
+
+model IssueComment {
+  id        String   @id @default(cuid())
+  body      String
+  author    String   @default("Anonymous")
+  createdAt DateTime @default(now())
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@index([issueId, createdAt])
+}
+
+model IssueActivity {
+  id        String   @id @default(cuid())
+  action    String
+  details   String
+  actor     String   @default("System")
+  createdAt DateTime @default(now())
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@index([issueId, createdAt])
+}
